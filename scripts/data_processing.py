@@ -12,7 +12,6 @@ CUSTOMER_SUMMARY_PATH = os.path.join(PROCESSED_DATA_DIR, "customer_summary.csv")
 def merge_order_history():
     """
     Reads and merges multiple CSV files from the raw data directory.
-    Uses the same approach as in the original Jupyter Notebook to avoid memory issues.
     
     Returns:
     - df (pd.DataFrame): Merged order history dataset.
@@ -98,7 +97,7 @@ def aggregate_customer_data(df, current_date=None):
     # Drop customers who are missing emails AFTER aggregation
     customer_summary.dropna(subset=['customer_email'], inplace=True)
 
-    # Ensure `customer_id` is stored as a string to prevent scientific notation in Excel
+    # Ensure `customer_id` is stored as a string 
     customer_summary['customer_id'] = customer_summary['customer_id'].astype(str)
 
     # Save processed file with explicit formatting to avoid scientific notation in Excel
