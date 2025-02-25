@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import io
 
 # Define default parameters
 DEFAULT_RECENCY_BINS = [0, 1, 2, 3, 4, 5, 6, 7, 13, 25, 37]  # Months
@@ -17,7 +18,7 @@ RANDOM_SEED = 42
 
 def bin_customers(df, recency_bins=None, frequency_bins=None):
     """
-    Categorizes customers into Recency and Frequency bins.
+    Categorizes customers into Recency and Frequency bins and prepares a downloadable CSV buffer.
 
     Args:
     - df (pd.DataFrame): Aggregated customer data with 'recency' and 'frequency' columns.
@@ -26,6 +27,7 @@ def bin_customers(df, recency_bins=None, frequency_bins=None):
 
     Returns:
     - df (pd.DataFrame): Updated DataFrame with RF segment labels.
+    - csv_buffer (io.StringIO): Buffer containing CSV data for download.
     """
     recency_bins = recency_bins or DEFAULT_RECENCY_BINS
     frequency_bins = frequency_bins or DEFAULT_FREQUENCY_BINS
@@ -44,7 +46,12 @@ def bin_customers(df, recency_bins=None, frequency_bins=None):
     # Create combined RF segment
     df["Segment"] = df["Frequency_Bucket"].astype(str) + "_" + df["Recency_Bucket"].astype(str)
 
-    return df
+    # Create a CSV buffer for download
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer, index=False)
+    csv_data = csv_buffer.getvalue()
+
+    return df, csv_data
 
 
 def stratified_sample(df, sample_sizes=None, seed=RANDOM_SEED):

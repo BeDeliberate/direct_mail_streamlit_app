@@ -69,29 +69,43 @@ if "customer_summary" in st.session_state:
         frequency_bins_input = st.text_input("Frequency Bins (comma-separated)", "1,2,3,4,5,inf")
         max_recency_threshold = st.number_input("Max Recency Threshold", value=36, step=1)
         segmentation_submitted = st.form_submit_button("🛠️ Apply Binning")
+
         if segmentation_submitted:
             try:
                 # Convert inputs into bin boundaries
                 recency_bins = [float(x.strip()) for x in recency_bins_input.split(",")]
                 frequency_bins = [float(x.strip()) if x.strip().lower() != "inf" else float("inf")
                                   for x in frequency_bins_input.split(",")]
+
                 # Filter out customers above the max recency threshold
                 df_filtered = df[df["recency"] <= max_recency_threshold]
                 if df_filtered.empty:
                     st.error("No customers have a recency value below the selected maximum threshold.")
                 else:
-                    df_segmented = bin_customers(df_filtered.copy(), recency_bins, frequency_bins)
+                    df_segmented, segmented_csv = bin_customers(df_filtered.copy(), recency_bins, frequency_bins)
                     if df_segmented.empty:
                         st.error("Segmentation resulted in an empty DataFrame. Please check your bin ranges.")
                     else:
-                        # Store the segmented data and bin arrays for later use
+                        # Store the segmented data in session state
                         st.session_state["segmented_df"] = df_segmented
                         st.session_state["recency_bins"] = recency_bins
                         st.session_state["frequency_bins"] = frequency_bins
+                        st.session_state["segmented_csv"] = segmented_csv
                         st.success("✅ Binning complete!")
                         st.dataframe(df_segmented.head(20))
+
             except Exception as e:
-                st.error("Invalid bin format. Please enter comma-separated numbers.")
+                st.error(f"Error processing binning: {e}")
+
+    # Download Button for Segmented Data
+    if "segmented_csv" in st.session_state:
+        st.subheader("📥 Download Segmented Customer Data")
+        st.download_button(
+            label="📥 Download Segmented Customers",
+            data=st.session_state["segmented_csv"],
+            file_name="Segmented_Customers.csv",
+            mime="text/csv"
+        )
 
     # After segmentation: Overall RF Pivot Table
     if "segmented_df" in st.session_state:
